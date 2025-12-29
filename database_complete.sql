@@ -65,6 +65,11 @@ CREATE TABLE IF NOT EXISTS employees (
   last_login TIMESTAMP,
   password_initialized BOOLEAN DEFAULT FALSE,
   first_login_date TIMESTAMP,
+  photo_path VARCHAR(255),
+  departement VARCHAR(255) DEFAULT '',
+  domaine_fonctionnel VARCHAR(255) DEFAULT '',
+  statut VARCHAR(50) DEFAULT 'Actif',
+  date_depart DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -98,6 +103,7 @@ CREATE TABLE IF NOT EXISTS users (
   first_name VARCHAR(100),
   last_name VARCHAR(100),
   nom_prenom VARCHAR(255),
+  poste_actuel VARCHAR(255),
   role VARCHAR(50) DEFAULT 'user',
   status VARCHAR(20) DEFAULT 'active',
   last_login TIMESTAMP,
