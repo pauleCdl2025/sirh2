@@ -48,9 +48,10 @@ app.use(cors({
 }));
 
 // Augmenter les limites pour éviter les timeouts
+const requestTimeout = parseInt(process.env.REQUEST_TIMEOUT) || 300000; // 5 minutes par défaut
 app.use(express.json({ 
   limit: '50mb',
-  timeout: 300000 // 5 minutes
+  timeout: requestTimeout
 }));
 
 // Middleware de logging pour toutes les requêtes
