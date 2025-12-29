@@ -11,6 +11,7 @@ class AdminAuthService {
   static ADMIN_CREDENTIALS = {
     'admin@system.ga': 'Admin@System2025!',
     'administrateur@centrediagnostic.ga': 'Admin@CDL2025!',
+    'dsi@centre-diagnostic.com': 'Admin@2025CDL',
     'superadmin@centrediagnostic.ga': 'SuperAdmin@2025!'
   };
 
