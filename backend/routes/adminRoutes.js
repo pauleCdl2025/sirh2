@@ -648,19 +648,33 @@ module.exports = (pool) => {
         `);
         
         if (tableCheck.rows[0]?.exists) {
+          // Vérifier si la colonne nom_prenom existe
+          const nomPrenomCheck = await pool.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users' AND column_name = 'nom_prenom'
+          `);
+          const hasNomPrenom = nomPrenomCheck.rows.length > 0;
+          
           let rhQuery = `
             SELECT 
               id, 
               email, 
               COALESCE(first_name, '') as first_name, 
               COALESCE(last_name, '') as last_name,
-              COALESCE(nom_prenom, '') as nom_prenom,
               COALESCE(role, 'rh') as role, 
               COALESCE(status, 'active') as status, 
               last_login, 
               created_at,
               updated_at,
               updated_by
+          `;
+          
+          if (hasNomPrenom) {
+            rhQuery += `, COALESCE(nom_prenom, '') as nom_prenom`;
+          }
+          
+          rhQuery += `
             FROM users 
             WHERE role IN ('admin', 'rh')
           `;
@@ -670,12 +684,17 @@ module.exports = (pool) => {
           // Récupérer les utilisateurs RH si userType est 'rh', 'all', ou non défini
           if (userType === 'rh' || userType === 'all' || !userType) {
             if (search) {
-              rhQuery += ` AND (
-                email ILIKE $${paramIndex} 
-                OR first_name ILIKE $${paramIndex} 
-                OR last_name ILIKE $${paramIndex}
-                OR nom_prenom ILIKE $${paramIndex}
-              )`;
+              let searchConditions = [
+                `email ILIKE $${paramIndex}`,
+                `first_name ILIKE $${paramIndex}`,
+                `last_name ILIKE $${paramIndex}`
+              ];
+              
+              if (hasNomPrenom) {
+                searchConditions.push(`nom_prenom ILIKE $${paramIndex}`);
+              }
+              
+              rhQuery += ` AND (${searchConditions.join(' OR ')})`;
               rhParams.push(`%${search}%`);
               paramIndex++;
             }
@@ -690,7 +709,7 @@ module.exports = (pool) => {
             console.log('✅ Utilisateurs RH récupérés:', rhResult.rows.length);
             
             rhUsers = rhResult.rows.map(row => {
-              const fullName = row.nom_prenom || 
+              const fullName = (hasNomPrenom && row.nom_prenom) || 
                               `${row.first_name || ''} ${row.last_name || ''}`.trim() || 
                               row.email;
               return {
