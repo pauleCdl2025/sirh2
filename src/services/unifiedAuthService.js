@@ -94,19 +94,16 @@ class UnifiedAuthService {
       }
     } catch (apiError) {
       // Si l'API échoue, retourner une erreur
+      console.error('Erreur lors de la connexion RH:', apiError);
       if (apiError.response?.status === 401) {
         return {
           success: false,
           error: apiError.response.data?.message || 'Identifiants incorrects'
         };
       }
-      throw apiError;
-    }
-  } catch (error) {
-      console.error('Erreur lors de la connexion RH:', error);
       return {
         success: false,
-        error: error.response?.data?.message || 'Une erreur est survenue lors de la connexion'
+        error: apiError.response?.data?.message || 'Une erreur est survenue lors de la connexion'
       };
     }
   }
