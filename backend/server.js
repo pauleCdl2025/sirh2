@@ -17,11 +17,17 @@ const port = process.env.PORT || 5000;
 const server = http.createServer(app);
 
 // Configure PostgreSQL connection with correct credentials
+// En production, toutes les variables d'environnement doivent être définies
+if (process.env.NODE_ENV === 'production' && !process.env.DB_PASSWORD) {
+  console.error('❌ ERREUR CRITIQUE: DB_PASSWORD n\'est pas défini en production!');
+  process.exit(1);
+}
+
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_NAME || 'rh_portal',
-  password: process.env.DB_PASSWORD || 'Cdl@2025',
+  password: process.env.DB_PASSWORD || (process.env.NODE_ENV === 'production' ? '' : 'Cdl@2025'),
   port: parseInt(process.env.DB_PORT) || 5432,
   // Configuration pour l'encodage UTF-8
   options: '-c client_encoding=UTF8',

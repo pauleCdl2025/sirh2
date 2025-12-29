@@ -77,3 +77,4 @@ Si vous ne configurez pas SMTP, le système fonctionnera en mode test :
 - Le token sera retourné dans la réponse API (pour les tests uniquement)
 
 
+

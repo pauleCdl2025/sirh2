@@ -133,3 +133,4 @@ En cas de problème, vérifier :
 4. La base de données est accessible
 5. Les logs du serveur pour les erreurs
 
+

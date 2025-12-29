@@ -54,34 +54,32 @@ export const authService = {
   // Login function
   async login(email, password) {
     try {
-      // Identifiants de test (à remplacer par votre logique d'API)
-      const validCredentials = {
-        'rh@centre-diagnostic.com': 'Rh@2025CDL',
-        'admin@centrediagnostic.ga': 'Admin@2025CDL',
-        'test@test.com': 'test123'
-      };
-      
-      // Simuler un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (validCredentials[email] === password) {
-        const userData = {
-          id: email, // Utiliser l'email comme ID pour les utilisateurs RH
-          email: email,
-          name: 'Admin RH',
-          role: 'admin',
-          nom: 'Admin',
-          prenom: 'RH',
-          poste: 'Administration',
-          fonction: 'Administrateur RH'
+      // Utiliser uniquement l'API backend pour l'authentification
+      const response = await api.post('/auth/login', {
+        email: email.trim(),
+        password: password
+      });
+
+      if (response.data && response.data.user) {
+        return {
+          success: true,
+          user: response.data.user,
+          token: response.data.token
         };
-        
-        return { success: true, user: userData };
       } else {
-        throw new Error('Identifiants incorrects');
+        return {
+          success: false,
+          error: response.data?.message || 'Identifiants incorrects'
+        };
       }
     } catch (error) {
       console.error('Login error:', error);
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          error: error.response.data?.message || 'Identifiants incorrects'
+        };
+      }
       return { success: false, error: error.message || 'Erreur de connexion' };
     }
   },

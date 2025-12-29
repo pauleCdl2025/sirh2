@@ -102,3 +102,4 @@ Pour vérifier si la configuration fonctionne, regardez les logs du serveur :
 - ⚠️ `⚠️ Configuration SMTP non trouvée...` = Mode test
 
 
+

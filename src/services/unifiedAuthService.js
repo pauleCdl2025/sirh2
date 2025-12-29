@@ -68,66 +68,41 @@ class UnifiedAuthService {
    */
   async loginRH(email, password) {
     try {
-      // Identifiants de test (à remplacer par l'API réelle)
-      const validCredentials = {
-        'rh@centre-diagnostic.com': 'Rh@2025CDL',
-        'admin@centrediagnostic.ga': 'Admin@2025CDL',
-        'test@test.com': 'test123'
-      };
+      // Utiliser uniquement l'API backend pour l'authentification
+      const response = await authApi.post('/auth/login', {
+        email: email.trim(),
+        password: password
+      });
 
-      // Essayer d'abord avec les identifiants de test
-      if (validCredentials[email] === password) {
+      if (response.data && response.data.user) {
+        // S'assurer que l'utilisateur a un ID (utiliser l'email si pas d'ID)
+        const user = response.data.user;
+        if (!user.id) {
+          user.id = user.email || email;
+        }
+        
         return {
           success: true,
-          user: {
-            id: email, // Utiliser l'email comme ID pour les utilisateurs RH
-            email: email,
-            name: 'Admin RH',
-            role: 'admin',
-            nom: 'Admin',
-            prenom: 'RH',
-            poste: 'Administration',
-            fonction: 'Administrateur RH'
-          }
+          user: user,
+          token: response.data.token
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data?.message || 'Identifiants incorrects'
         };
       }
-
-      // Essayer avec l'API réelle
-      try {
-        const response = await authApi.post('/auth/login', {
-          email: email.trim(),
-          password: password
-        });
-
-        if (response.data && response.data.user) {
-          // S'assurer que l'utilisateur a un ID (utiliser l'email si pas d'ID)
-          const user = response.data.user;
-          if (!user.id) {
-            user.id = user.email || email;
-          }
-          
-          return {
-            success: true,
-            user: user,
-            token: response.data.token
-          };
-        } else {
-          return {
-            success: false,
-            error: response.data?.message || 'Identifiants incorrects'
-          };
-        }
-      } catch (apiError) {
-        // Si l'API échoue, retourner une erreur
-        if (apiError.response?.status === 401) {
-          return {
-            success: false,
-            error: apiError.response.data?.message || 'Identifiants incorrects'
-          };
-        }
-        throw apiError;
+    } catch (apiError) {
+      // Si l'API échoue, retourner une erreur
+      if (apiError.response?.status === 401) {
+        return {
+          success: false,
+          error: apiError.response.data?.message || 'Identifiants incorrects'
+        };
       }
-    } catch (error) {
+      throw apiError;
+    }
+  } catch (error) {
       console.error('Erreur lors de la connexion RH:', error);
       return {
         success: false,

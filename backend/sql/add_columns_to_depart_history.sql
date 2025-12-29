@@ -63,3 +63,4 @@ WHERE dh.employee_id = e.id
   AND (dh.nom_prenom IS NULL OR dh.matricule IS NULL OR dh.poste_actuel IS NULL);
 
 
+
