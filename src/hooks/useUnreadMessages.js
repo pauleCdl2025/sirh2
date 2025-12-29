@@ -25,8 +25,8 @@ export const useUnreadMessages = () => {
       // Déterminer le type d'utilisateur et l'endpoint approprié
       const isRH = user.role === 'admin' || user.role === 'rh';
       const endpoint = isRH 
-        ? `http://localhost:5000/api/messages/stats/rh/${userId}`
-        : `http://localhost:5000/api/messages/stats/employee/${userId}`;
+        ? `${getApiBaseUrl()}/messages/stats/rh/${userId}`
+        : `${getApiBaseUrl()}/messages/stats/employee/${userId}`;
 
       console.log('🔍 useUnreadMessages: isRH =', isRH, 'Endpoint:', endpoint);
 

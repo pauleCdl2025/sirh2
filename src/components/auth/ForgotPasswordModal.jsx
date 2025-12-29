@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../../styles/ForgotPasswordModal.css';
+import { getApiBaseUrl } from '../../utils/apiUrl';
 
 const ForgotPasswordModal = ({ isOpen, onClose, userType, identifier }) => {
   const [emailOrMatricule, setEmailOrMatricule] = useState(identifier || '');
@@ -15,7 +16,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, userType, identifier }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/password-reset/request-reset', {
+      const response = await fetch(`${getApiBaseUrl()}/password-reset/request-reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

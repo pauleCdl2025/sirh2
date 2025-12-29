@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { requestService } from '../../services/api';
 import '../../styles/Tables.css';
 import '../../styles/EmployeeRequests.css';
+import { getApiBaseUrl } from '../../utils/apiUrl';
 
 const EmployeeRequests = () => {
   // États principaux
@@ -312,7 +313,7 @@ const EmployeeRequests = () => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:5000/api/requests/all', {
+      const response = await fetch(`${getApiBaseUrl()}/requests/all`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

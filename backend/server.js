@@ -37,7 +37,13 @@ const pool = new Pool({
 
 // Middleware optimisé pour éviter les timeouts
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5001'],
+  origin: [
+    'http://localhost:3000', 
+    'http://localhost:3001', 
+    'http://localhost:5001',
+    'http://172.16.3.52:3000',
+    process.env.CORS_ORIGIN || 'http://172.16.3.52:3000'
+  ],
   credentials: true
 }));
 

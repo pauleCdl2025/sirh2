@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import '../../styles/ResetPassword.css';
+import { getApiBaseUrl } from '../../utils/apiUrl';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -28,7 +29,7 @@ const ResetPassword = () => {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/password-reset/verify-token/${token}`);
+        const response = await fetch(`${getApiBaseUrl()}/password-reset/verify-token/${token}`);
         const data = await response.json();
 
         if (data.valid) {
@@ -83,7 +84,7 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/password-reset/reset-password', {
+      const response = await fetch(`${getApiBaseUrl()}/password-reset/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

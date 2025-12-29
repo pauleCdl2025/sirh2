@@ -12,6 +12,7 @@ import {
 import EmployeeNotes from '../common/EmployeeNotes';
 import ChangePasswordModal from './ChangePasswordModal';
 import EmployeePersonalStats from './EmployeePersonalStats';
+import { getApiBaseUrl, getServerBaseUrl } from '../../utils/apiUrl';
 
 // Composant pour la modale de détails des sanctions
 const SanctionDetailsModal = ({ sanction, isOpen, onClose }) => {
@@ -279,7 +280,7 @@ const EmployeePortal = ({ onLogout }) => {
         try {
           setLoadingDocuments(true);
           console.log("Chargement des documents pour l'employé ID:", userId);
-          const response = await fetch(`http://localhost:5000/api/employees/${userId}/documents`, {
+          const response = await fetch(`${getApiBaseUrl()}/employees/${userId}/documents`, {
             headers: {
               'Authorization': `Bearer ${sessionStorage.getItem('token')}`
             }
@@ -505,7 +506,7 @@ const EmployeePortal = ({ onLogout }) => {
       
       // Construire l'URL avec le token d'authentification
       const token = sessionStorage.getItem('token');
-      const url = `http://localhost:5000/api/employees/documents/${doc.id}/view?token=${token}`;
+      const url = `${getApiBaseUrl()}/employees/documents/${doc.id}/view?token=${token}`;
       window.open(url, '_blank');
     } catch (error) {
       console.error('Erreur lors de l\'ouverture du document:', error);
@@ -522,7 +523,7 @@ const EmployeePortal = ({ onLogout }) => {
         throw new Error('Document non disponible');
       }
       
-      const response = await fetch(`http://localhost:5000/api/employees/documents/${doc.id}/download`, {
+      const response = await fetch(`${getApiBaseUrl()}/employees/documents/${doc.id}/download`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${sessionStorage.getItem('token')}`
@@ -688,7 +689,7 @@ const EmployeePortal = ({ onLogout }) => {
           <div className="user-avatar">
             {user?.photo_path ? (
               <img 
-                src={`http://localhost:5000${user.photo_path}`} 
+                src={`${getServerBaseUrl()}${user.photo_path}`} 
                 alt={user?.nom_prenom || 'Utilisateur'}
                 className="user-photo"
                 onError={(e) => {
@@ -1378,7 +1379,7 @@ const EmployeePortal = ({ onLogout }) => {
                 <div className="profile-avatar">
                   {user?.photo_path ? (
                     <img 
-                      src={`http://localhost:5000${user.photo_path}`} 
+                      src={`${getServerBaseUrl()}${user.photo_path}`} 
                       alt={user?.nom_prenom || 'Utilisateur'}
                       className="profile-photo"
                       onError={(e) => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ContratPDFManager.css';
+import { getApiBaseUrl, getServerBaseUrl } from '../../utils/apiUrl';
 
 const ContratPDFManager = () => {
   const [logo, setLogo] = useState(null);
@@ -21,7 +22,7 @@ const ContratPDFManager = () => {
 
   const fetchContrats = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/contrats');
+      const response = await fetch(`${getApiBaseUrl()}/contrats`);
       if (response.ok) {
         const data = await response.json();
         setContrats(data);
@@ -34,7 +35,7 @@ const ContratPDFManager = () => {
 
   const fetchGeneratedPDFs = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/contrats-pdf/list');
+      const response = await fetch(`${getApiBaseUrl()}/contrats-pdf/list`);
       if (response.ok) {
         const data = await response.json();
         setGeneratedPDFs(data);
@@ -53,7 +54,7 @@ const ContratPDFManager = () => {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/contrats-pdf/upload-logo', {
+      const response = await fetch(`${getApiBaseUrl()}/contrats-pdf/upload-logo`, {
         method: 'POST',
         body: formData
       });
@@ -76,7 +77,7 @@ const ContratPDFManager = () => {
   const generatePDF = async (contrat) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/contrats-pdf/generate/${contrat.id}`, {
+      const response = await fetch(`${getApiBaseUrl()}/contrats-pdf/generate/${contrat.id}`, {
         method: 'POST'
       });
 
@@ -96,12 +97,12 @@ const ContratPDFManager = () => {
   };
 
   const viewPDF = (filename) => {
-    window.open(`http://localhost:5000/uploads/contrats/${filename}`, '_blank');
+    window.open(`${getServerBaseUrl()}/uploads/contrats/${filename}`, '_blank');
   };
 
   const downloadPDF = async (filename) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/contrats-pdf/download/${filename}`);
+      const response = await fetch(`${getApiBaseUrl()}/contrats-pdf/download/${filename}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -123,7 +124,7 @@ const ContratPDFManager = () => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce PDF ?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/contrats-pdf/delete/${filename}`, {
+      const response = await fetch(`${getApiBaseUrl()}/contrats-pdf/delete/${filename}`, {
         method: 'DELETE'
       });
 

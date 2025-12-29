@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import webSocketService from '../../services/webSocketService';
 import './EmployeeMessagingSimple.css';
+import { getApiBaseUrl } from '../../utils/apiUrl';
 
 const EmployeeMessagingSimple = ({ user }) => {
   const [messages, setMessages] = useState([]);
@@ -14,7 +15,7 @@ const EmployeeMessagingSimple = ({ user }) => {
     const loadMessages = async () => {
       try {
         console.log(`🔄 Chargement des messages pour l'employé ${user?.nom_prenom}...`);
-        const response = await fetch(`http://localhost:5000/api/messages/employee/${user?.id}`);
+        const response = await fetch(`${getApiBaseUrl()}/messages/employee/${user?.id}`);
         if (response.ok) {
           const data = await response.json();
           console.log('✅ Messages chargés:', data.messages?.length || 0);
@@ -73,7 +74,7 @@ const EmployeeMessagingSimple = ({ user }) => {
   // Charger les compteurs de messages non lus
   const loadUnreadCount = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/messages/stats/employee/${user?.id}`);
+      const response = await fetch(`${getApiBaseUrl()}/messages/stats/employee/${user?.id}`);
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.unreadCount || 0);
@@ -110,7 +111,7 @@ const EmployeeMessagingSimple = ({ user }) => {
   // Marquer les messages comme lus
   const markMessagesAsRead = async () => {
     try {
-      await fetch('http://localhost:5000/api/messages/mark-read-conversation', {
+      await fetch(`${getApiBaseUrl()}/messages/mark-read-conversation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -142,7 +143,7 @@ const EmployeeMessagingSimple = ({ user }) => {
 
     try {
       console.log('📤 Envoi du message:', messageData);
-      const response = await fetch('http://localhost:5000/api/messages', {
+      const response = await fetch(`${getApiBaseUrl()}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(messageData)

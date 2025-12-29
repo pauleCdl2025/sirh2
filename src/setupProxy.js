@@ -8,8 +8,10 @@ module.exports = function(app) {
   });
   
   // Configuration proxy pour l'API backend
+  // En production, utilisez les variables d'environnement pour la cible
+  const proxyTarget = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
   app.use('/api', createProxyMiddleware({
-    target: 'http://localhost:5000',
+    target: proxyTarget,
     changeOrigin: true,
     timeout: 30000,
     proxyTimeout: 30000,
