@@ -77,9 +77,13 @@ const AdminUsersManagement = () => {
       setPasswordError('');
       const { user_type, id } = resetPasswordModal;
       
-      const url = user_type === 'rh' 
-        ? `admin/users/rh/${id}/reset-password`
-        : `admin/employees/${id}/reset-password`;
+      let url;
+      if (user_type === 'rh' || user_type === 'admin') {
+        url = `admin/users/rh/${id}/reset-password`;
+      } else {
+        // Pour les employés, utiliser la route admin
+        url = `admin/employees/${id}/reset-password`;
+      }
 
       await api.post(url, { newPassword });
 
@@ -211,9 +215,9 @@ const AdminUsersManagement = () => {
                 filteredUsers.map(user => (
                   <tr key={`${user.user_type}-${user.id}`}>
                     <td>
-                      <span className={`user-type-badge type-${user.user_type}`}>
-                        {getUserTypeIcon(user.user_type)}
-                        {user.user_type === 'rh' ? 'RH' : 'Employé'}
+                      <span className={`user-type-badge type-${user.user_type || 'rh'}`}>
+                        {getUserTypeIcon(user.user_type || 'rh')}
+                        {user.user_type === 'admin' ? 'Admin' : user.user_type === 'rh' ? 'RH' : 'Employé'}
                       </span>
                     </td>
                     <td>
@@ -373,8 +377,8 @@ const AdminUsersManagement = () => {
 
       <div className="users-stats">
         <div className="stat-card">
-          <div className="stat-value">{filteredUsers.filter(u => u.user_type === 'rh').length}</div>
-          <div className="stat-label">Utilisateurs RH</div>
+          <div className="stat-value">{filteredUsers.filter(u => u.user_type === 'rh' || u.user_type === 'admin').length}</div>
+          <div className="stat-label">Utilisateurs RH/Admin</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{filteredUsers.filter(u => u.user_type === 'employee').length}</div>

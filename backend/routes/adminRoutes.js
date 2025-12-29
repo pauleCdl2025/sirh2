@@ -513,7 +513,7 @@ module.exports = (pool) => {
     }
   });
 
-  // Route pour réinitialiser le mot de passe d'un utilisateur RH
+  // Route pour réinitialiser le mot de passe d'un utilisateur RH ou Admin
   router.post('/users/rh/:userId/reset-password', async (req, res) => {
     try {
       const { userId } = req.params;
@@ -655,12 +655,14 @@ module.exports = (pool) => {
               COALESCE(first_name, '') as first_name, 
               COALESCE(last_name, '') as last_name,
               COALESCE(nom_prenom, '') as nom_prenom,
-              role, 
-              status, 
+              COALESCE(role, 'rh') as role, 
+              COALESCE(status, 'active') as status, 
               last_login, 
-              created_at 
+              created_at,
+              updated_at,
+              updated_by
             FROM users 
-            WHERE 1=1
+            WHERE role IN ('admin', 'rh')
           `;
           const rhParams = [];
           let paramIndex = 1;
@@ -687,10 +689,13 @@ module.exports = (pool) => {
                               row.email;
               return {
                 ...row,
-                user_type: 'rh',
+                user_type: row.role === 'admin' ? 'admin' : 'rh',
                 identifier: row.email,
                 name: fullName,
-                nom_prenom: fullName
+                nom_prenom: fullName,
+                poste_actuel: row.role === 'admin' ? 'Administrateur Système' : 'Utilisateur RH',
+                // S'assurer que status est bien défini
+                status: row.status || 'active'
               };
             });
           }
