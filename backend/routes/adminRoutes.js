@@ -1,7 +1,210 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 module.exports = (pool) => {
   const router = express.Router();
+
+  // Route d'authentification admin
+  router.post('/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      console.log('🔐 Tentative de connexion admin:', { email, hasPassword: !!password });
+      
+      // Normaliser l'email
+      const normalizedEmail = email?.trim().toLowerCase();
+      
+      if (!normalizedEmail || !password) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Email et mot de passe sont requis' 
+        });
+      }
+
+      // Identifiants de test (fallback)
+      const testCredentials = {
+        'admin@system.ga': 'Admin@System2025!',
+        'dsi@centre-diagnostic.com': 'Dsi@CDL2025!',
+        'superadmin@centrediagnostic.ga': 'SuperAdmin@2025!'
+      };
+
+      // Vérifier d'abord les identifiants de test (fallback)
+      if (testCredentials[normalizedEmail] === password) {
+        console.log('✅ Connexion admin réussie avec identifiants de test');
+        
+        // Enregistrer dans login_history
+        try {
+          const tableExists = await pool.query(`
+            SELECT EXISTS (
+              SELECT FROM information_schema.tables 
+              WHERE table_schema = 'public' 
+              AND table_name = 'login_history'
+            );
+          `);
+          
+          if (tableExists.rows[0]?.exists) {
+            const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            
+            await pool.query(`
+              INSERT INTO login_history (
+                user_type, user_id, email, ip_address, user_agent, login_status
+              ) VALUES ($1, $2, $3, $4, $5, $6)
+            `, ['rh', normalizedEmail, normalizedEmail, ipAddress, userAgent, 'success']);
+          }
+        } catch (logError) {
+          console.error('Erreur lors de l\'enregistrement:', logError);
+        }
+        
+        // Créer un token JWT
+        const token = jwt.sign(
+          { 
+            id: normalizedEmail,
+            email: normalizedEmail, 
+            role: 'admin' 
+          },
+          process.env.JWT_SECRET || 'fallback-secret-key',
+          { expiresIn: '24h' }
+        );
+        
+        return res.json({
+          success: true,
+          token,
+          admin: {
+            id: normalizedEmail,
+            email: normalizedEmail,
+            name: 'Administrateur Système',
+            role: 'admin',
+            nom: 'Administrateur',
+            prenom: 'Système',
+            poste: 'Administrateur Principal',
+            fonction: 'Gestionnaire Système',
+            isAdmin: true,
+            isSuperAdmin: true
+          }
+        });
+      }
+
+      // Si pas d'identifiants de test, chercher en base de données
+      if (pool) {
+        try {
+          const userResult = await pool.query(
+            'SELECT * FROM users WHERE email = $1 AND role = $2',
+            [normalizedEmail, 'admin']
+          );
+          
+          if (userResult.rows.length > 0) {
+            const user = userResult.rows[0];
+            
+            // Vérifier si le compte est bloqué ou suspendu
+            if (user.status === 'suspended' || user.status === 'inactive') {
+              console.log('❌ Tentative de connexion avec un compte admin bloqué/suspendu:', normalizedEmail);
+              try {
+                const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+                const userAgent = req.headers['user-agent'] || 'unknown';
+                await pool.query(`
+                  INSERT INTO login_history (
+                    user_type, user_id, email, ip_address, user_agent, login_status, failure_reason
+                  ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                `, ['rh', user.id.toString(), user.email, ipAddress, userAgent, 'failed', `Compte ${user.status === 'suspended' ? 'suspendu' : 'inactif'}`]);
+              } catch (logError) {
+                console.error('Erreur lors de l\'enregistrement:', logError);
+              }
+              return res.status(403).json({ 
+                success: false,
+                message: 'Ce compte est bloqué. Veuillez contacter l\'administrateur.' 
+              });
+            }
+            
+            // Vérifier le mot de passe
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            
+            if (isPasswordValid) {
+              console.log('✅ Authentification admin réussie pour:', user.email);
+              
+              // Enregistrer dans login_history
+              try {
+                const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+                const userAgent = req.headers['user-agent'] || 'unknown';
+                
+                await pool.query(`
+                  INSERT INTO login_history (
+                    user_type, user_id, email, ip_address, user_agent, login_status
+                  ) VALUES ($1, $2, $3, $4, $5, $6)
+                `, ['rh', user.id.toString(), user.email, ipAddress, userAgent, 'success']);
+              } catch (logError) {
+                console.error('Erreur lors de l\'enregistrement:', logError);
+              }
+              
+              // Créer un token JWT
+              const token = jwt.sign(
+                { 
+                  id: user.id,
+                  email: user.email, 
+                  role: 'admin' 
+                },
+                process.env.JWT_SECRET || 'fallback-secret-key',
+                { expiresIn: '24h' }
+              );
+              
+              // Récupérer nom_prenom si disponible
+              const nomPrenom = user.nom_prenom || user.nom || 'Administrateur';
+              const parts = nomPrenom.split(' ');
+              const nom = parts[0] || 'Administrateur';
+              const prenom = parts.slice(1).join(' ') || 'Système';
+              
+              return res.json({
+                success: true,
+                token,
+                admin: {
+                  id: user.id,
+                  email: user.email,
+                  name: nomPrenom,
+                  role: 'admin',
+                  nom: nom,
+                  prenom: prenom,
+                  poste: user.poste_actuel || 'Administrateur Principal',
+                  fonction: 'Gestionnaire Système',
+                  isAdmin: true,
+                  isSuperAdmin: true
+                }
+              });
+            } else {
+              console.log('❌ Mot de passe incorrect pour admin:', normalizedEmail);
+              // Enregistrer la tentative échouée
+              try {
+                const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+                const userAgent = req.headers['user-agent'] || 'unknown';
+                await pool.query(`
+                  INSERT INTO login_history (
+                    user_type, user_id, email, ip_address, user_agent, login_status, failure_reason
+                  ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                `, ['rh', user.id.toString(), user.email, ipAddress, userAgent, 'failed', 'Mot de passe incorrect']);
+              } catch (logError) {
+                console.error('Erreur lors de l\'enregistrement:', logError);
+              }
+            }
+          } else {
+            console.log('❌ Admin non trouvé avec l\'email:', normalizedEmail);
+          }
+        } catch (dbError) {
+          console.error('Erreur lors de la recherche en base de données:', dbError);
+        }
+      }
+
+      return res.status(401).json({ 
+        success: false,
+        message: 'Identifiants administrateur incorrects' 
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'authentification admin:', error);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Une erreur est survenue lors de la connexion' 
+      });
+    }
+  });
 
   // Route pour obtenir les statistiques globales des deux portails
   router.get('/stats/overview', async (req, res) => {

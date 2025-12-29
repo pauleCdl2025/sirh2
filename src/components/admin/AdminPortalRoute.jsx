@@ -16,7 +16,7 @@ const AdminPortalRoute = () => {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Vérifier l'authentification
+    // Vérifier l'authentification une seule fois
     const checkAuth = () => {
       const adminUser = sessionStorage.getItem('adminUser');
       const authenticated = !!adminUser;
@@ -28,10 +28,7 @@ const AdminPortalRoute = () => {
     // Vérifier immédiatement
     checkAuth();
 
-    // Vérifier périodiquement pour détecter les changements
-    const interval = setInterval(checkAuth, 500);
-
-    // Écouter les événements de stockage
+    // Écouter uniquement les événements de stockage (pas d'intervalle)
     const handleStorageChange = (e) => {
       if (e.key === 'adminUser') {
         checkAuth();
@@ -39,9 +36,15 @@ const AdminPortalRoute = () => {
     };
     window.addEventListener('storage', handleStorageChange);
 
+    // Écouter les changements dans le même onglet via un événement personnalisé
+    const handleCustomStorageChange = () => {
+      checkAuth();
+    };
+    window.addEventListener('adminAuthChange', handleCustomStorageChange);
+
     return () => {
-      clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('adminAuthChange', handleCustomStorageChange);
     };
   }, []);
 

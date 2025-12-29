@@ -9,7 +9,7 @@ module.exports = (pool) => {
   const testCredentials = {
     'rh@centre-diagnostic.com': 'Rh@2025CDL',
     'admin@centrediagnostic.ga': 'Admin@2025CDL',
-    'dsi@centre-diagnostic.com': 'Admin@2025CDL',
+    'dsi@centre-diagnostic.com': 'Dsi@CDL2025!',
     'test@test.com': 'test123'
   };
 

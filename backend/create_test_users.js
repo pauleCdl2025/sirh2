@@ -36,14 +36,6 @@ async function createTestUsers() {
     // Liste des utilisateurs à créer
     const usersToCreate = [
       {
-        email: 'administrateur@centrediagnostic.ga',
-        password: 'Admin@2025CDL',
-        role: 'admin',
-        first_name: 'Administrateur',
-        last_name: 'Système',
-        status: 'active'
-      },
-      {
         email: 'rh@centre-diagnostic.com',
         password: 'Rh@2025CDL',
         role: 'rh',

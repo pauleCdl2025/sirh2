@@ -97,14 +97,15 @@ const UnifiedLogin = () => {
             localStorage.setItem('rememberedAdmin', normalizedIdentifier);
           }
           
+          // Déclencher un événement personnalisé pour notifier AdminPortalRoute
+          window.dispatchEvent(new Event('adminAuthChange'));
+          
           // Rediriger vers le portail admin
           console.log('🔄 Redirection vers /admin-portal...');
           console.log('💾 Vérification sessionStorage:', sessionStorage.getItem('adminUser') ? 'présent' : 'absent');
           
-          // Le composant AdminPortalRoute vérifie maintenant périodiquement le sessionStorage
-          // Donc navigate() devrait fonctionner, mais utilisons window.location.href pour forcer le rechargement
-          // et garantir que le composant se monte avec les bonnes valeurs du sessionStorage
-          window.location.href = '/admin-portal';
+          // Utiliser navigate() au lieu de window.location.href pour éviter le rechargement complet
+          navigate('/admin-portal', { replace: true });
           return;
         } else {
           setError(adminResult?.error || 'Identifiants administrateur incorrects');
