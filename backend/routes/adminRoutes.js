@@ -667,7 +667,8 @@ module.exports = (pool) => {
           const rhParams = [];
           let paramIndex = 1;
 
-          if (userType === 'rh' || !userType) {
+          // Récupérer les utilisateurs RH si userType est 'rh', 'all', ou non défini
+          if (userType === 'rh' || userType === 'all' || !userType) {
             if (search) {
               rhQuery += ` AND (
                 email ILIKE $${paramIndex} 
@@ -679,10 +680,15 @@ module.exports = (pool) => {
               paramIndex++;
             }
 
-            rhQuery += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+            rhQuery += ` ORDER BY COALESCE(created_at, '1970-01-01'::timestamp) DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
             rhParams.push(parseInt(limit), parseInt(offset));
 
+            console.log('🔍 Requête RH:', rhQuery);
+            console.log('📊 Paramètres RH:', rhParams);
+            
             const rhResult = await pool.query(rhQuery, rhParams);
+            console.log('✅ Utilisateurs RH récupérés:', rhResult.rows.length);
+            
             rhUsers = rhResult.rows.map(row => {
               const fullName = row.nom_prenom || 
                               `${row.first_name || ''} ${row.last_name || ''}`.trim() || 
@@ -709,7 +715,7 @@ module.exports = (pool) => {
       // Récupérer les employés
       let employees = [];
       try {
-        if (userType === 'employee' || !userType) {
+        if (userType === 'employee' || userType === 'all' || !userType) {
           let empQuery = `
             SELECT id, matricule, nom_prenom, email, poste_actuel, statut_employe, last_login, created_at 
             FROM employees 
@@ -742,6 +748,12 @@ module.exports = (pool) => {
       }
 
       const allUsers = [...rhUsers, ...employees];
+      
+      console.log('📊 Résumé de la récupération:');
+      console.log(`   - Utilisateurs RH/Admin: ${rhUsers.length}`);
+      console.log(`   - Employés: ${employees.length}`);
+      console.log(`   - Total: ${allUsers.length}`);
+      
       res.json(allUsers);
     } catch (err) {
       console.error('Error fetching all users:', err);
