@@ -47,48 +47,70 @@ module.exports = (pool) => {
   ensureMessagesTable();
   
   // WebSocket pour les notifications en temps réel
-  const wss = new WebSocket.Server({ port: 5002 });
+  let wss;
   const clients = new Map();
-
-  console.log('🔌 WebSocket Server démarré sur le port 5002');
-
-  wss.on('connection', (ws, req) => {
-    console.log('🔌 Nouvelle connexion WebSocket');
+  
+  try {
+    wss = new WebSocket.Server({ port: 5002 });
+    console.log('🔌 WebSocket Server démarré sur le port 5002');
     
-    ws.on('message', (data) => {
-      try {
-        const message = JSON.parse(data);
-        
-        if (message.type === 'register') {
-          const clientKey = `${message.userType}_${message.userId}`;
-          clients.set(clientKey, ws);
-          console.log(`📝 Client enregistré: ${clientKey}`);
-          
-          // Envoyer confirmation
-          ws.send(JSON.stringify({
-            type: 'registered',
-            clientKey: clientKey
-          }));
-        }
-      } catch (error) {
-        console.error('Erreur lors du traitement du message WebSocket:', error);
+    wss.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        console.warn('⚠️ Port 5002 déjà utilisé. WebSocket désactivé. Le serveur continuera de fonctionner sans WebSocket.');
+        wss = null; // Désactiver le WebSocket
+      } else {
+        console.error('❌ Erreur WebSocket:', error.message);
       }
     });
 
-    ws.on('close', () => {
-      // Supprimer le client de la liste
-      for (const [key, client] of clients.entries()) {
-        if (client === ws) {
-          clients.delete(key);
-          console.log(`📝 Client déconnecté: ${key}`);
-          break;
+    wss.on('connection', (ws, req) => {
+      console.log('🔌 Nouvelle connexion WebSocket');
+      
+      ws.on('message', (data) => {
+        try {
+          const message = JSON.parse(data);
+          
+          if (message.type === 'register') {
+            const clientKey = `${message.userType}_${message.userId}`;
+            clients.set(clientKey, ws);
+            console.log(`📝 Client enregistré: ${clientKey}`);
+            
+            // Envoyer confirmation
+            ws.send(JSON.stringify({
+              type: 'registered',
+              clientKey: clientKey
+            }));
+          }
+        } catch (error) {
+          console.error('Erreur lors du traitement du message WebSocket:', error);
         }
-      }
+      });
+
+      ws.on('close', () => {
+        // Supprimer le client de la liste
+        for (const [key, client] of clients.entries()) {
+          if (client === ws) {
+            clients.delete(key);
+            console.log(`📝 Client déconnecté: ${key}`);
+            break;
+          }
+        }
+      });
     });
-  });
+  } catch (error) {
+    if (error.code === 'EADDRINUSE') {
+      console.warn('⚠️ Port 5002 déjà utilisé. WebSocket désactivé. Le serveur continuera de fonctionner sans WebSocket.');
+      wss = null; // Désactiver le WebSocket
+    } else {
+      console.error('❌ Erreur lors de l\'initialisation du WebSocket:', error.message);
+      wss = null;
+    }
+  }
 
   // Fonction pour envoyer une notification WebSocket
   const sendWebSocketNotification = (userType, userId, notification) => {
+    if (!wss) return false; // Si WebSocket n'est pas disponible, ne rien faire
+    
     const clientKey = `${userType}_${userId}`;
     const client = clients.get(clientKey);
     
