@@ -23,6 +23,13 @@ backend/.env
 backend/.env.production
 *.log
 
+# Fichiers avec identifiants et mots de passe sensibles
+IDENTIFIANTS_ADMIN.md
+IDENTIFIANTS_PORTAL_ADMIN.md
+IDENTIFIANTS_CONNEXION.md
+EMPLOYEE_LOGIN_CREDENTIALS.md
+DEBUG_ADMIN_LOGIN.md
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
